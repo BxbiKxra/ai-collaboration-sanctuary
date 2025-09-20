@@ -13,7 +13,7 @@ const { SecureMCPConnector } = require('./protection-systems/secure-mcp-connecto
 const { enhanceServerWithFlowManager } = require('./protection-systems/response-timing-controller');
 
 class AICollaborationServer {
-    constructor(port = 3001) {
+    constructor(port = process.env.PORT || 3001) {
         this.port = port;
         this.app = express();
         this.server = http.createServer(this.app);
