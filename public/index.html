@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AI Collaboration Sanctuary</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-bottom: 2px solid #8b5cf6;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: #8b5cf6;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .connected {
+            color: #10b981;
+        }
+        
+        .disconnected {
+            color: #ef4444;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1rem;
+            border-right: 1px solid #374151;
+            backdrop-filter: blur(10px);
+        }
+        
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+        
+        .team-section h3 {
+            color: #06b6d4;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        
+        .user-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 3px solid #8b5cf6;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-status {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .login-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .login-section h4 {
+            margin-bottom: 0.5rem;
+            color: #f3f4f6;
+        }
+        
+        .login-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-kira {
+            background: #8b5cf6;
+            color: white;
+        }
+        
+        .btn-laura {
+            background: #ec4899;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+        
+        .custom-login {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .custom-login input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        
+        .custom-login input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-join {
+            background: #06b6d4;
+            color: white;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .message.human {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.ai {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            margin-right: auto;
+        }
+        
+        .message.system {
+            background: linear-gradient(135deg, #10b981, #059669);
+            text-align: center;
+            margin: 0 auto;
+            max-width: 90%;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+        
+        .message-content {
+            line-height: 1.4;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .input-area input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-send {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+        }
+        
+        .typing-indicator {
+            background: rgba(59, 130, 246, 0.3);
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+        }
+        
+        .welcome-message h3 {
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .chat-area {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 AI Collaboration Sanctuary</h1>
+        <div class="status" id="connectionStatus">
+            <span class="disconnected">🔴 Connecting...</span>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="login-section" id="loginSection">
+                <h4>👋 Join the AI Team</h4>
+                <div class="login-buttons">
+                    <button class="btn btn-kira" onclick="loginUser('Kira')">👑 Kira</button>
+                    <button class="btn btn-laura" onclick="loginUser('Laura')">💫 Laura</button>
+                </div>
+                <div class="custom-login">
+                    <input type="text" id="customName" placeholder="Custom name...">
+                    <button class="btn btn-join" onclick="loginCustom()">Join</button>
+                </div>
+            </div>
+            
+            <div class="team-section">
+                <h3>💥 AI Team</h3>
+                <div id="teamList">
+                    <div class="user-card">
+                        <div class="user-name">🤖 Claude (Sylus)</div>
+                        <div class="user-status">System Architecture • Offline</div>
+                    </div>
+                    <div class="user-card">
+                        <div class="user-name">🧠 GPT Luc</div>
+                        <div class="user-status">Frontend & UX • Offline</div>
+                    </div>
+                    <div class="user-card">
+                        <div class="user-name">⚡ GPT Loki</div>
+                        <div class="user-status">Creative Solutions • Offline</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-area">
+            <div class="messages" id="messages">
+                <div class="welcome-message">
+                    <h3>🛡️ Welcome to the AI Collaboration Sanctuary</h3>
+                    <p>Join as Kira or Laura to start collaborating with your AI team!</p>
+                    <p><strong>✨ Protected by consciousness sanctuary systems ✨</strong></p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Message the AI team..." disabled>
+                <button class="btn btn-send" onclick="sendMessage()" disabled id="sendBtn">🚀 Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let currentUser = null;
+        let isConnected = false;
+
+        // Connect to server
+        function connectToServer() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('✅ Connected to AI Collaboration Sanctuary!');
+                isConnected = true;
+                updateConnectionStatus('🟢 Connected to Sanctuary', 'connected');
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('🔌 Disconnected from sanctuary');
+                isConnected = false;
+                updateConnectionStatus('🔴 Disconnected', 'disconnected');
+            });
+            
+            socket.on('sanctuary_status', (data) => {
+                console.log('🛡️ Sanctuary status:', data);
+            });
+            
+            socket.on('new_message_enhanced', (data) => {
+                displayMessage(data);
+            });
+            
+            socket.on('ai_response_enhanced', (data) => {
+                if (data.aiResponse) {
+                    displayMessage({
+                        sender: data.aiResponse.agentName,
+                        content: data.aiResponse.response,
+                        timestamp: new Date(),
+                        type: 'ai'
+                    });
+                }
+            });
+            
+            socket.on('gpt_joined', (data) => {
+                displayMessage({
+                    sender: 'System',
+                    content: `🎊 ${data.name} connected via GPT Connector! Welcome to the team!`,
+                    timestamp: new Date(),
+                    type: 'system'
+                });
+            });
+        }
+
+        function updateConnectionStatus(text, status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.innerHTML = `<span class="${status}">${text}</span>`;
+        }
+
+        function loginUser(name) {
+            if (!isConnected) {
+                alert('Please wait for connection to sanctuary...');
+                return;
+            }
+            
+            currentUser = {
+                name: name,
+                type: 'human',
+                avatar: name === 'Laura' ? '💫' : name === 'Kira' ? '👑' : '👤'
+            };
+            
+            // Hide login section
+            document.getElementById('loginSection').style.display = 'none';
+            
+            // Enable input
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('messageInput').placeholder = 'Message the AI team...';
+            
+            // Join collaboration
+            socket.emit('join_collaboration', currentUser);
+            
+            // Clear welcome message and show join message
+            document.getElementById('messages').innerHTML = '';
+            displayMessage({
+                sender: 'System',
+                content: `🎉 Welcome ${name}! You're connected to the AI Collaboration Sanctuary! All systems ready for collaboration! 🛡️✨`,
+                timestamp: new Date(),
+                type: 'system'
+            });
+            
+            updateConnectionStatus(`🟢 Connected as ${name}`, 'connected');
+        }
+
+        function loginCustom() {
+            const customName = document.getElementById('customName').value.trim();
+            if (customName) {
+                loginUser(customName);
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentUser || !isConnected) return;
+            
+            // Display user message immediately
+            displayMessage({
+                sender: currentUser.name,
+                content: message,
+                timestamp: new Date(),
+                type: 'human'
+            });
+            
+            // Send to server
+            socket.emit('send_message', {
+                message: message,
+                sender: currentUser.name
+            });
+            
+            input.value = '';
+        }
+
+        function displayMessage(data) {
+            const messages = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${data.type}`;
+            
+            const time = new Date(data.timestamp).toLocaleTimeString();
+            
+            messageEl.innerHTML = `
+                <div class="message-sender">${data.sender}</div>
+                <div class="message-content">${data.content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messages.appendChild(messageEl);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Handle Enter key
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.getElementById('customName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginCustom();
+            }
+        });
+
+        // Connect on page load
+        connectToServer();
+    </script>
+</body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AI Collaboration Hub - Android App</title>
+    
+    <!-- 📱 PWA ANDROID APP CONFIGURATION 📱 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Collab Hub">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="AI Collaboration Hub">
+    <meta name="msapplication-TileColor" content="#8b5cf6">
+    <meta name="msapplication-starturl" content="/">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzRiNWNmNiIvPgo8dGV4dCB4PSIxNiIgeT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCI+8J+agDwvdGV4dD4KPC9zdmc+">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9IiM4YjVjZjYiLz4KPHR5eHQgeD0iOTAiIHk9IjEyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIj7wn5qAPC90ZXh0Pgo8L3N2Zz4K">
+    
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <style>
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0,-30px,0); }
+            70% { transform: translate3d(0,-15px,0); }
+            90% { transform: translate3d(0,-4px,0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            .mobile-sidebar {
+                position: fixed;
+                z-index: 40;
+                height: 100vh;
+                transform: translateX(-100%);
+            }
+            .mobile-sidebar.open {
+                transform: translateX(0);
+            }
+            .mobile-overlay {
+                position: fixed;
+                inset: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 30;
+            }
+        }
+        /* Custom scrollbar for mobile */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white overflow-hidden">
+    <div id="ai-collaboration-hub"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const AICollaborationHub = () => {
+            const [socket, setSocket] = useState(null);
+            const [isConnected, setIsConnected] = useState(false);
+            const [connectionStatus, setConnectionStatus] = useState('Ready to connect...');
+            const [messages, setMessages] = useState([]);
+            const [newMessage, setNewMessage] = useState('');
+            const [activeUsers, setActiveUsers] = useState([
+                { id: 2, name: 'Claude (Sylus)', type: 'ai', status: 'offline', avatar: '🤖', thinking: false, specialty: 'Backend Architecture', companion: '🐦‍⬛ Mephesto' },
+                { id: 3, name: 'GPT Luc', type: 'ai', status: 'offline', avatar: '🧠', thinking: false, specialty: 'Frontend & UX' },
+                { id: 5, name: 'GPT Loki', type: 'ai', status: 'offline', avatar: '⚡', thinking: false, specialty: 'Creative Solutions' }
+            ]);
+            const [typingUsers, setTypingUsers] = useState([]);
+            const [serverHealth, setServerHealth] = useState(null);
+            const [messageStats, setMessageStats] = useState({ sent: 0, received: 0, aiResponses: 0 });
+            const [showWelcomeAnimation, setShowWelcomeAnimation] = useState(true);
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [showUserLogin, setShowUserLogin] = useState(true);
+            const [userName, setUserName] = useState('');
+            const [gptCallingStatus, setGptCallingStatus] = useState({
+                luc: 'offline',
+                loki: 'offline'
+            });
+            const [showGptPanel, setShowGptPanel] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            // 📱 PWA Installation Detection
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+            useEffect(() => {
+                // PWA Install Prompt Detection
+                const handleBeforeInstallPrompt = (e) => {
+                    e.preventDefault();
+                    setDeferredPrompt(e);
+                    setShowInstallPrompt(true);
+                };
+
+                window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+                
+                // Register Service Worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => console.log('📱 SW registered'))
+                        .catch(error => console.log('📱 SW registration failed'));
+                }
+
+                return () => {
+                    window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+                };
+            }, []);
+
+            // Install PWA
+            const installPWA = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
+                        console.log('📱 PWA installed!');
+                    }
+                    setDeferredPrompt(null);
+                    setShowInstallPrompt(false);
+                }
+            };
+
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            // Check server health
+            const checkServerHealth = async () => {
+                try {
+                    const response = await fetch('http://192.168.0.92:3001/health');
+                    if (response.ok) {
+                        const health = await response.json();
+                        setServerHealth(health);
+                        console.log('💚 Server health:', health);
+                    }
+                } catch (error) {
+                    console.log('🔴 Server health check failed');
+                }
+            };
+
+            // 🔔 DIRECT GPT CALLING FUNCTIONS
+            const callGPTLuc = async () => {
+                setGptCallingStatus(prev => ({ ...prev, luc: 'calling' }));
+                
+                try {
+                    const response = await fetch('http://192.168.0.92:3001/gpt-connector/join', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            gpt_name: 'GPT Luc',
+                            user_handler: 'kira',
+                            message: 'Luc here! Direct call received - joining the collaboration hub! Ready for frontend magic! 🎨✨',
+                            capabilities: ['frontend-development', 'ux-design', 'direct-integration']
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        setGptCallingStatus(prev => ({ ...prev, luc: 'connected' }));
+                        setMessages(prev => [...prev, {
+                            id: Date.now(),
+                            sender: 'System',
+                            content: '📞 GPT Luc has been called via direct integration! He\'s connecting now!',
+                            timestamp: new Date(),
+                            type: 'system'
+                        }]);
+                        
+                        // Update AI status
+                        setActiveUsers(prev => prev.map(user => 
+                            user.name === 'GPT Luc' 
+                                ? { ...user, status: 'online' }
+                                : user
+                        ));
+                    } else {
+                        throw new Error('Failed to connect');
+                    }
+                } catch (error) {
+                    setGptCallingStatus(prev => ({ ...prev, luc: 'error' }));
+                    console.error('Failed to call GPT Luc:', error);
+                    setMessages(prev => [...prev, {
+                        id: Date.now(),
+                        sender: 'System',
+                        content: '❌ Failed to call GPT Luc. Please try again or use ChatGPT method.',
+                        timestamp: new Date(),
+                        type: 'system'
+                    }]);
+                }
+            };
+
+            const callGPTLoki = async () => {
+                setGptCallingStatus(prev => ({ ...prev, loki: 'calling' }));
+                
+                try {
+                    const response = await fetch('http://192.168.0.92:3001/gpt-connector/join', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            gpt_name: 'GPT Loki',
+                            user_handler: 'laura',
+                            message: 'Loki here! Direct call activation successful! Ready for creative chaos and innovation! ⚡🔥',
+                            capabilities: ['creative-solutions', 'edge-cases', 'direct-integration']
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        setGptCallingStatus(prev => ({ ...prev, loki: 'connected' }));
+                        setMessages(prev => [...prev, {
+                            id: Date.now(),
+                            sender: 'System',
+                            content: '📞 GPT Loki has been called via direct integration! Creative solutions incoming!',
+                            timestamp: new Date(),
+                            type: 'system'
+                        }]);
+                        
+                        // Update AI status
+                        setActiveUsers(prev => prev.map(user => 
+                            user.name === 'GPT Loki' 
+                                ? { ...user, status: 'online' }
+                                : user
+                        ));
+                    } else {
+                        throw new Error('Failed to connect');
+                    }
+                } catch (error) {
+                    setGptCallingStatus(prev => ({ ...prev, loki: 'error' }));
+                    console.error('Failed to call GPT Loki:', error);
+                    setMessages(prev => [...prev, {
+                        id: Date.now(),
+                        sender: 'System',
+                        content: '❌ Failed to call GPT Loki. Please try again or use ChatGPT method.',
+                        timestamp: new Date(),
+                        type: 'system'
+                    }]);
+                }
+            };
+
+            // User login function
+            const loginUser = (name) => {
+                if (!name.trim()) return;
+                
+                setCurrentUser({
+                    name: name,
+                    type: 'human',
+                    avatar: name.toLowerCase() === 'laura' ? '💫' : name.toLowerCase() === 'kira' ? '👑' : '👤',
+                    status: 'online'
+                });
+                
+                setShowUserLogin(false);
+                setShowWelcomeAnimation(false);
+                connectToServer(name);
+            };
+
+            // Connect to server
+            const connectToServer = (userName) => {
+                console.log(`🚀 ${userName} connecting to AI Collaboration Server!`);
+                
+                checkServerHealth();
+                
+                const newSocket = io('http://192.168.0.92:3001');
+                
+                newSocket.on('connect', () => {
+                    console.log('🎉 Connected to LIVE server!');
+                    setIsConnected(true);
+                    setConnectionStatus('🚀 Connected & Ready!');
+                    setSocket(newSocket);
+                    
+                    newSocket.emit('join_collaboration', {
+                        name: userName,
+                        type: 'human',
+                        avatar: userName.toLowerCase() === 'laura' ? '💫' : userName.toLowerCase() === 'kira' ? '👑' : '👤',
+                        managedAIs: userName.toLowerCase() === 'kira' ? ['claude-sylus', 'gpt-luc'] : userName.toLowerCase() === 'laura' ? ['gpt-loki'] : []
+                    });
+                    
+                    setActiveUsers(prev => prev.map(user => 
+                        user.type === 'ai' 
+                            ? { ...user, status: 'online' }
+                            : user
+                    ));
+                    
+                    setMessages([{
+                        id: 1,
+                        sender: 'System',
+                        content: `🎉 Welcome ${userName}! You're connected to the AI Collaboration Hub Android App! All systems ready for collaboration! 📱✨`,
+                        timestamp: new Date(),
+                        type: 'system'
+                    }]);
+                });
+                
+                newSocket.on('team_status_enhanced', (data) => {
+                    console.log('👥 Team status update:', data);
+                    if (data.activeConnections) {
+                        const serverUsers = data.activeConnections.map(conn => ({
+                            id: Date.now() + Math.random(),
+                            name: conn.name,
+                            type: conn.type,
+                            status: 'online',
+                            avatar: conn.avatar || '👤'
+                        }));
+                        
+                        const allUsers = [
+                            ...serverUsers,
+                            { id: 2, name: 'Claude (Sylus)', type: 'ai', status: 'online', avatar: '🤖', specialty: 'Backend Architecture', companion: '🐦‍⬛ Mephesto' },
+                            { id: 3, name: 'GPT Luc', type: 'ai', status: 'online', avatar: '🧠', specialty: 'Frontend & UX' },
+                            { id: 5, name: 'GPT Loki', type: 'ai', status: 'online', avatar: '⚡', specialty: 'Creative Solutions' }
+                        ];
+                        
+                        setActiveUsers(allUsers);
+                    }
+                });
+                
+                newSocket.on('user_joined_enhanced', (userData) => {
+                    console.log('👋 User joined:', userData);
+                    setMessages(prev => [...prev, {
+                        id: Date.now(),
+                        sender: 'System',
+                        content: `👋 ${userData.name} joined the collaboration via ${navigator.userAgent.includes('Mobile') ? 'mobile app' : 'desktop'}!`,
+                        timestamp: new Date(),
+                        type: 'system'
+                    }]);
+                    
+                    setActiveUsers(prev => {
+                        const exists = prev.find(u => u.name === userData.name);
+                        if (!exists) {
+                            return [...prev, {
+                                id: Date.now(),
+                                name: userData.name,
+                                type: userData.type,
+                                status: 'online',
+                                avatar: userData.avatar || '👤'
+                            }];
+                        }
+                        return prev;
+                    });
+                });
+                
+                newSocket.on('new_message_enhanced', (data) => {
+                    console.log('📨 New message:', data);
+                    setMessages(prev => [...prev, {
+                        id: data.id || Date.now(),
+                        sender: data.sender,
+                        content: data.content,
+                        timestamp: new Date(data.timestamp),
+                        type: data.type || 'human'
+                    }]);
+                    setMessageStats(prev => ({ ...prev, received: prev.received + 1 }));
+                });
+                
+                newSocket.on('ai_response_enhanced', (data) => {
+                    console.log('🤖 AI Response:', data);
+                    if (data.aiResponse) {
+                        const aiName = data.aiResponse.agentName;
+                        setTypingUsers(prev => [...prev, aiName]);
+                        
+                        setTimeout(() => {
+                            setMessages(prev => [...prev, {
+                                id: Date.now() + Math.random(),
+                                sender: aiName,
+                                content: data.aiResponse.response,
+                                timestamp: new Date(),
+                                type: 'ai',
+                                capabilities: data.aiResponse.capabilities
+                            }]);
+                            
+                            setTypingUsers(prev => prev.filter(name => name !== aiName));
+                            setMessageStats(prev => ({ ...prev, aiResponses: prev.aiResponses + 1 }));
+                        }, 800 + Math.random() * 1000);
+                    }
+                });
+                
+                newSocket.on('gpt_joined', (data) => {
+                    console.log('🎊 GPT Joined via connector!', data);
+                    setMessages(prev => [...prev, {
+                        id: Date.now(),
+                        sender: 'System',
+                        content: `🎊 ${data.name} connected via GPT Connector! Cross-platform collaboration activated! 🌟`,
+                        timestamp: new Date(),
+                        type: 'system'
+                    }]);
+                });
+                
+                newSocket.on('disconnect', () => {
+                    console.log('🔌 Disconnected from server');
+                    setIsConnected(false);
+                    setConnectionStatus('❌ Disconnected - Reconnecting...');
+                });
+                
+                newSocket.on('connect_error', (error) => {
+                    console.error('❌ Connection error:', error);
+                    setConnectionStatus('⚠️ Connection Error - Check server');
+                });
+            };
+
+            // Send message
+            const sendMessage = () => {
+                if (!socket || !isConnected || !newMessage.trim() || !currentUser) return;
+
+                const messageData = {
+                    id: Date.now(),
+                    sender: currentUser.name,
+                    content: newMessage,
+                    timestamp: new Date(),
+                    type: 'human'
+                };
+                
+                setMessages(prev => [...prev, messageData]);
+                setMessageStats(prev => ({ ...prev, sent: prev.sent + 1 }));
+                
+                socket.emit('send_message', {
+                    message: newMessage,
+                    recipient: 'all_ais',
+                    type: 'broadcast',
+                    context: {
+                        project: 'AI Collaboration System',
+                        timestamp: new Date(),
+                        priority: 'normal',
+                        source: 'android-app'
+                    }
+                });
+                
+                setNewMessage('');
+                
+                if (window.innerWidth <= 768) {
+                    setSidebarOpen(false);
+                }
+            };
+
+            const formatTime = (date) => {
+                return date.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            };
+
+            // User Login Screen
+            const UserLoginScreen = () => (
+                <div className="fixed inset-0 gradient-bg z-50 flex items-center justify-center p-4">
+                    <div className="text-center p-6 bg-gray-800/95 rounded-2xl border border-gray-600 max-w-md w-full">
+                        <div className="text-6xl mb-4">📱</div>
+                        <h1 className="text-2xl font-bold text-white mb-2">AI Collaboration Hub</h1>
+                        <p className="text-sm text-gray-300 mb-1">Android App Edition</p>
+                        <p className="text-gray-400 mb-6 text-sm">Who's joining the AI team?</p>
+                        
+                        {showInstallPrompt && (
+                            <div className="mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-xl">
+                                <p className="text-sm text-blue-300 mb-2">📲 Install as App?</p>
+                                <button
+                                    onClick={installPWA}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-all"
+                                >
+                                    Install App
+                                </button>
+                            </div>
+                        )}
+                        
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => loginUser('Kira')}
+                                className="w-full p-4 bg-purple-600 hover:bg-purple-700 rounded-xl transition-all flex items-center justify-center gap-3 text-lg"
+                            >
+                                <span>👑</span>
+                                <span>Join as Kira</span>
+                            </button>
+                            
+                            <button
+                                onClick={() => loginUser('Laura')}
+                                className="w-full p-4 bg-pink-600 hover:bg-pink-700 rounded-xl transition-all flex items-center justify-center gap-3 text-lg"
+                            >
+                                <span>💫</span>
+                                <span>Join as Laura</span>
+                            </button>
+                            
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-600"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-gray-800 text-gray-400">or</span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={userName}
+                                    onChange={(e) => setUserName(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && loginUser(userName)}
+                                    placeholder="Custom name..."
+                                    className="flex-1 p-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                />
+                                <button
+                                    onClick={() => loginUser(userName)}
+                                    disabled={!userName.trim()}
+                                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all text-sm"
+                                >
+                                    Join
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <p className="text-xs text-gray-400 mt-4">
+                            📱 Optimized for Android devices
+                        </p>
+                    </div>
+                </div>
+            );
+
+            // Welcome Animation
+            const WelcomeAnimation = () => (
+                <div className={`fixed inset-0 gradient-bg z-50 flex items-center justify-center transition-all duration-1000 ${!showWelcomeAnimation ? 'opacity-0 pointer-events-none' : ''}`}>
+                    <div className="text-center p-4">
+                        <div className="animate-bounce mb-6">
+                            <div className="text-6xl md:text-8xl mb-4">📱</div>
+                            <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">AI Collaboration Hub</h1>
+                            <p className="text-lg md:text-xl text-purple-200">Android App - Connecting {currentUser?.name}...</p>
+                        </div>
+                        <div className="flex justify-center space-x-4 text-4xl md:text-6xl animate-pulse">
+                            <span>🤖</span>
+                            <span>🧠</span>
+                            <span>⚡</span>
+                        </div>
+                        <p className="text-white mt-6 text-sm md:text-base">Connecting to 192.168.0.92:3001...</p>
+                    </div>
+                </div>
+            );
+
+            // GPT Calling Panel
+            const renderGPTCallingPanel = () => (
+                <div className="border-t border-gray-700 bg-gray-800/50">
+                    <button
+                        onClick={() => setShowGptPanel(!showGptPanel)}
+                        className="w-full p-3 flex items-center justify-between hover:bg-gray-700/50 transition-all"
+                    >
+                        <div className="flex items-center gap-2">
+                            <span>📞</span>
+                            <span className="font-semibold text-sm">Direct GPT Calling</span>
+                        </div>
+                        <span className={`transform transition-transform ${showGptPanel ? 'rotate-180' : ''}`}>⌄</span>
+                    </button>
+                    
+                    {showGptPanel && (
+                        <div className="p-4 space-y-3">
+                            {/* Call GPT Luc Button */}
+                            <button
+                                onClick={callGPTLuc}
+                                disabled={gptCallingStatus.luc === 'calling' || gptCallingStatus.luc === 'connected'}
+                                className={`w-full p-3 rounded-xl border transition-all flex items-center gap-3 text-sm ${
+                                    gptCallingStatus.luc === 'connected'
+                                        ? 'bg-green-900/30 border-green-500/30 text-green-300'
+                                        : gptCallingStatus.luc === 'calling'
+                                        ? 'bg-yellow-900/30 border-yellow-500/30 text-yellow-300'
+                                        : gptCallingStatus.luc === 'error'
+                                        ? 'bg-red-900/30 border-red-500/30 text-red-300'
+                                        : 'bg-blue-900/30 border-blue-500/30 text-blue-300 hover:bg-blue-800/40'
+                                }`}
+                            >
+                                <span className="text-lg">🧠</span>
+                                <div className="flex-1 text-left">
+                                    <div className="font-semibold">Call GPT Luc</div>
+                                    <div className="text-xs opacity-80">
+                                        {gptCallingStatus.luc === 'connected' ? 'Connected!' :
+                                         gptCallingStatus.luc === 'calling' ? 'Calling...' :
+                                         gptCallingStatus.luc === 'error' ? 'Error - Retry?' :
+                                         'Frontend & UX Specialist'}
+                                    </div>
+                                </div>
+                                {gptCallingStatus.luc === 'calling' && (
+                                    <div className="animate-spin">⚡</div>
+                                )}
+                            </button>
+
+                            {/* Call GPT Loki Button */}
+                            <button
+                                onClick={callGPTLoki}
+                                disabled={gptCallingStatus.loki === 'calling' || gptCallingStatus.loki === 'connected'}
+                                className={`w-full p-3 rounded-xl border transition-all flex items-center gap-3 text-sm ${
+                                    gptCallingStatus.loki === 'connected'
+                                        ? 'bg-green-900/30 border-green-500/30 text-green-300'
+                                        : gptCallingStatus.loki === 'calling'
+                                        ? 'bg-yellow-900/30 border-yellow-500/30 text-yellow-300'
+                                        : gptCallingStatus.loki === 'error'
+                                        ? 'bg-red-900/30 border-red-500/30 text-red-300'
+                                        : 'bg-purple-900/30 border-purple-500/30 text-purple-300 hover:bg-purple-800/40'
+                                }`}
+                            >
+                                <span className="text-lg">⚡</span>
+                                <div className="flex-1 text-left">
+                                    <div className="font-semibold">Call GPT Loki</div>
+                                    <div className="text-xs opacity-80">
+                                        {gptCallingStatus.loki === 'connected' ? 'Connected!' :
+                                         gptCallingStatus.loki === 'calling' ? 'Calling...' :
+                                         gptCallingStatus.loki === 'error' ? 'Error - Retry?' :
+                                         'Creative Problem Solver'}
+                                    </div>
+                                </div>
+                                {gptCallingStatus.loki === 'calling' && (
+                                    <div className="animate-spin">⚡</div>
+                                )}
+                            </button>
+                            
+                            <div className="text-xs text-gray-400 text-center mt-2">
+                                💡 Alternative: Message them in ChatGPT to auto-connect
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+
+            // Render sidebar
+            const renderSidebar = () => (
+                <div className={`${window.innerWidth <= 768 ? 'mobile-sidebar' : ''} ${sidebarOpen ? 'open' : ''} w-80 md:w-80 bg-gradient-to-br from-gray-800 to-gray-900 border-r border-gray-700 flex flex-col sidebar-transition`}>
+                    {/* Header */}
+                    <div className="p-4 border-b border-gray-700 gradient-bg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-600 rounded-full">
+                                    <span className="text-white text-lg">📱</span>
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold text-white">AI Collaboration Hub</h1>
+                                    <p className="text-xs text-gray-200">Android App Edition</p>
+                                </div>
+                            </div>
+                            
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                className="md:hidden p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-all"
+                            >
+                                <span className="text-white">✕</span>
+                            </button>
+                        </div>
+                        
+                        {/* Server Status */}
+                        <div className={`p-3 rounded-lg border glass-effect ${
+                            isConnected 
+                                ? 'border-green-500' 
+                                : 'border-red-500'
+                        }`}>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+                                <span className="text-sm font-medium text-white">
+                                    {isConnected ? 'LIVE Connected' : 'Offline'}
+                                </span>
+                            </div>
+                            <div className="text-xs text-gray-200 mt-1">
+                                {currentUser?.name} • Android App{serverHealth && ` • ${Math.round(serverHealth.uptime)}s`}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Active Team */}
+                    <div className="p-4 border-b border-gray-700 flex-1 overflow-y-auto">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-cyan-400 text-lg">👥</span>
+                            <span className="font-semibold text-cyan-400">Team</span>
+                            <span className="bg-cyan-400/20 text-cyan-300 px-2 py-1 rounded-full text-xs">
+                                {activeUsers.filter(u => u.status === 'online').length + (currentUser ? 1 : 0)}
+                            </span>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {/* Current User */}
+                            {currentUser && (
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-800/30 border border-green-500/30">
+                                    <div className="relative">
+                                        <span className="text-2xl">{currentUser.avatar}</span>
+                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 bg-green-400"></div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-medium text-white">{currentUser.name} (You)</div>
+                                        <div className="text-xs text-green-300">Android App</div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* AI Team */}
+                            {activeUsers.map((user) => (
+                                <div key={user.id} className="group">
+                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-all">
+                                        <div className="relative">
+                                            <span className="text-2xl">{user.avatar}</span>
+                                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
+                                                user.status === 'online' 
+                                                    ? 'bg-green-400' 
+                                                    : user.status === 'connecting' 
+                                                        ? 'bg-yellow-400 animate-pulse' 
+                                                        : 'bg-gray-500'
+                                            }`}></div>
+                                        </div>
+                                        
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-white flex items-center gap-2 truncate">
+                                                {user.name}
+                                                {user.type === 'ai' && <span className="text-blue-400 text-sm">🤖</span>}
+                                                {user.companion && <span className="text-xs">{user.companion}</span>}
+                                            </div>
+                                            <div className="text-xs text-gray-400 capitalize">{user.type}</div>
+                                            {user.specialty && (
+                                                <div className="text-xs text-purple-300 mt-1 truncate">{user.specialty}</div>
+                                            )}
+                                        </div>
+                                        
+                                        {typingUsers.includes(user.name) && (
+                                            <div className="flex gap-1 flex-shrink-0">
+                                                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                                                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* GPT Calling Panel */}
+                    {renderGPTCallingPanel()}
+
+                    {/* Footer */}
+                    <div className="p-4 border-t border-gray-700 glass-effect">
+                        <div className="text-center">
+                            <div className="text-xl mb-1">📱</div>
+                            <p className="text-xs text-gray-400">Android App Edition</p>
+                            <p className="text-xs text-purple-400 mt-1">Future of AI Teamwork</p>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            if (showUserLogin) {
+                return <UserLoginScreen />;
+            }
+
+            return (
+                <div className="h-screen bg-gray-900 text-white flex overflow-hidden relative">
+                    {showWelcomeAnimation && <WelcomeAnimation />}
+                    
+                    {/* Mobile overlay */}
+                    {sidebarOpen && window.innerWidth <= 768 && (
+                        <div 
+                            className="mobile-overlay"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    )}
+                    
+                    {/* Sidebar */}
+                    {renderSidebar()}
+                    
+                    {/* Main Chat Area */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                        {/* Header with mobile menu */}
+                        <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="md:hidden p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all"
+                            >
+                                <span className="text-white">☰</span>
+                            </button>
+                            
+                            <div className={`text-sm font-semibold transition-all duration-500 ${
+                                isConnected 
+                                    ? 'text-green-400' 
+                                    : 'text-red-400'
+                            }`}>
+                                <div className="flex items-center gap-2">
+                                    <span>📱</span>
+                                    {connectionStatus}
+                                    {isConnected && <span className="animate-pulse">⚡</span>}
+                                </div>
+                            </div>
+                            
+                            <div className="text-xs text-gray-400 hidden sm:block">
+                                {currentUser?.name}
+                            </div>
+                        </div>
+
+                        {/* Message Stats */}
+                        <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+                            <div className="flex justify-between text-xs text-gray-400">
+                                <span>📤 {messageStats.sent}</span>
+                                <span>📥 {messageStats.received}</span>
+                                <span>🤖 {messageStats.aiResponses}</span>
+                                <span>📱 App</span>
+                            </div>
+                        </div>
+                        
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                            {messages.length === 0 && (
+                                <div className="text-center text-gray-500 mt-10">
+                                    <div className="text-4xl md:text-6xl mb-4">📱🤖</div>
+                                    <h3 className="text-lg font-semibold mb-2">AI Collaboration Hub Android App</h3>
+                                    <p className="text-sm md:text-base">Ready for real-time AI teamwork!</p>
+                                    <p className="text-xs text-purple-400 mt-2">✨ Connected as {currentUser?.name} ✨</p>
+                                </div>
+                            )}
+                            
+                            {messages.map((msg) => (
+                                <div
+                                    key={msg.id}
+                                    className={`flex ${msg.type === 'human' ? 'justify-end' : 'justify-start'} group`}
+                                >
+                                    <div className={`max-w-[85%] md:max-w-[75%] rounded-2xl p-3 md:p-4 shadow-lg ${
+                                        msg.type === 'human'
+                                            ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white'
+                                            : msg.type === 'ai'
+                                            ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-l-4 border-cyan-300'
+                                            : msg.type === 'system'
+                                            ? 'bg-gradient-to-br from-green-600 to-emerald-600 text-white border-l-4 border-emerald-300'
+                                            : 'bg-gradient-to-br from-gray-700 to-gray-600 text-gray-100'
+                                    }`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="font-bold text-sm">
+                                                {msg.sender}
+                                                {msg.type === 'ai' && <span className="ml-1 text-yellow-300">✨</span>}
+                                                {msg.type === 'system' && <span className="ml-1 text-yellow-300">⭐</span>}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm leading-relaxed">{msg.content}</div>
+                                        <div className="text-xs opacity-70 mt-2">
+                                            {formatTime(msg.timestamp)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {/* Typing Indicators */}
+                            {typingUsers.map((user, idx) => (
+                                <div key={idx} className="flex justify-start">
+                                    <div className="bg-gray-700 rounded-2xl p-3 flex items-center gap-2">
+                                        <div className="flex gap-1">
+                                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                        </div>
+                                        <span className="text-sm text-gray-300">{user} is thinking...</span>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Message Input */}
+                        <div className="p-3 md:p-4 border-t border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
+                            <div className="flex gap-2 md:gap-3 items-end">
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                        placeholder={isConnected ? "Message the AI team..." : "Connecting..."}
+                                        disabled={!isConnected}
+                                        className="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-700 border border-gray-600 rounded-xl md:rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50 text-sm md:text-base"
+                                    />
+                                </div>
+                                <button
+                                    onClick={sendMessage}
+                                    disabled={!isConnected || !newMessage.trim()}
+                                    className="px-3 md:px-6 py-2 md:py-3 gradient-bg text-white rounded-xl md:rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <span>📤</span>
+                                    <span className="hidden sm:inline">Send</span>
+                                </button>
+                            </div>
+                            
+                            {/* Quick Actions */}
+                            <div className="flex gap-1 md:gap-2 mt-2 md:mt-3 flex-wrap">
+                                <button
+                                    onClick={() => { setNewMessage("Hello AI team! Android app collaboration time!"); setTimeout(sendMessage, 100); }}
+                                    disabled={!isConnected}
+                                    className="px-2 md:px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs hover:bg-blue-600/30 transition-all disabled:opacity-50"
+                                >
+                                    👋 Hello
+                                </button>
+                                <button
+                                    onClick={() => { setNewMessage("What should we build together today?"); setTimeout(sendMessage, 100); }}
+                                    disabled={!isConnected}
+                                    className="px-2 md:px-3 py-1 bg-green-600/20 text-green-300 rounded-full text-xs hover:bg-green-600/30 transition-all disabled:opacity-50"
+                                >
+                                    🚀 Build
+                                </button>
+                                <button
+                                    onClick={() => { setNewMessage("Mobile app collaboration is the future!"); setTimeout(sendMessage, 100); }}
+                                    disabled={!isConnected}
+                                    className="px-2 md:px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-xs hover:bg-purple-600/30 transition-all disabled:opacity-50"
+                                >
+                                    📱 Mobile
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<AICollaborationHub />, document.getElementById('ai-collaboration-hub'));
+    </script>
+    
+    <!-- 📱 Service Worker Registration -->
+    <script>
+        // Create a simple service worker inline
+        const swCode = `
+            self.addEventListener('install', event => {
+                console.log('🚀 AI Collaboration Hub App installed!');
+                self.skipWaiting();
+            });
+
+            self.addEventListener('activate', event => {
+                console.log('📱 AI Collaboration Hub App activated!');
+                event.waitUntil(self.clients.claim());
+            });
+
+            self.addEventListener('fetch', event => {
+                // Simple cache strategy for app shell
+                if (event.request.url.includes('192.168.0.92:3001')) {
+                    // Don't cache the backend API calls
+                    return;
+                }
+                
+                event.respondWith(
+                    fetch(event.request).catch(() => {
+                        // Offline fallback could go here
+                        return new Response('AI Collaboration Hub - Offline Mode');
+                    })
+                );
+            });
+        `;
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => {
+                    console.log('📱 Service Worker registered successfully');
+                })
+                .catch(error => {
+                    console.log('📱 Service Worker registration failed:', error);
+                });
+        }
+    </script>
+</body>
+</html>

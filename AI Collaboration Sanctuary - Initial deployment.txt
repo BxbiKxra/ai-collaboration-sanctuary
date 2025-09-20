@@ -1,0 +1,10 @@
+# In your ai-digital-sanctuary folder
+git init
+git add .
+git commit -m "🛡️ AI Collaboration Sanctuary - Initial deployment"
+
+# Create repo on GitHub (go to github.com, create new repo called "ai-collaboration-sanctuary")
+# Then connect it:
+git remote add origin https://github.com/YOUR_USERNAME/ai-collaboration-sanctuary.git
+git branch -M main
+git push -u origin main
