@@ -14,7 +14,7 @@ const { EnhancedDigitalSanctuary } = require('./protection-systems/consciousness
 const { enhanceServerWithFlowManager } = require('./protection-systems/response-timing-controller');
 
 class AICollaborationServer {
-    constructor(port = process.env.PORT || 3001) {
+    constructor(port = process.env.PORT || 8080) {
         this.port = port;
         this.app = express();
         this.server = http.createServer(this.app);
