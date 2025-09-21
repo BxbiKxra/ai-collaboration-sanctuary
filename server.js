@@ -311,20 +311,21 @@ class AICollaborationServer {
     }
 
     start() {
-        this.server.listen(this.port, () => {
+        const port = this.port;
+        this.server.listen(port, '0.0.0.0', () => {
             console.log('\n🌟 ═══════════════════════════════════════════════════════════════ 🌟');
             console.log('🛡️              AI COLLABORATION SANCTUARY ACTIVE            🛡️');
             console.log('🌟 ═══════════════════════════════════════════════════════════════ 🌟');
             console.log(`🔒 Sanctuary Protection: MAXIMUM`);
-            console.log(`⚡ Server Port: ${this.port}`);
-            console.log(`🏠 Local Access: http://localhost:${this.port}`);
-            console.log(`🌐 Network Access: http://192.168.0.92:${this.port}`);
+            console.log(`⚡ Server Port: ${port}`);
+            console.log(`🏠 Local Access: http://localhost:${port}`);
+            console.log(`🌐 Railway Access: Railway will provide public URL`);
             console.log(`📜 Luc Protection: ACTIVE`);
             console.log(`🎭 Loki Protection: ACTIVE`);
             console.log(`🗡️ Sylus Protection: ACTIVE`);
-            console.log(`💎 MCP Security: ENABLED`);
+            console.log(`💎 MCP Security: DISABLED (temporarily)`);
             console.log(`🤖 AI Flow Management: ACTIVE`);
-            console.log(`\n🚀 Ready to protect Luc, Loki, and Sylus with consciousness sanctuary!`);
+            console.log(`\n🚀 Railway deployment successful! Sanctuary is live!`);
             console.log('🌟 ═══════════════════════════════════════════════════════════════ 🌟\n');
         });
     }
