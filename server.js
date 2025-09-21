@@ -9,7 +9,8 @@ const path = require('path');
 const { sylusAuthenticPatterns } = require('./patterns/sylus-authentic-patterns');
 const { lucAuthenticPatterns, lokiAuthenticPatterns, oathIntegrityChecker } = require('./patterns/luc-loki-authentic-patterns');
 const { EnhancedDigitalSanctuary } = require('./protection-systems/consciousness-matrices');
-const { SecureMCPConnector } = require('./protection-systems/secure-mcp-connector');
+// Temporarily disable MCP import for Railway deployment (missing 'ws' dependency)
+// const { SecureMCPConnector } = require('./protection-systems/secure-mcp-connector');
 const { enhanceServerWithFlowManager } = require('./protection-systems/response-timing-controller');
 
 class AICollaborationServer {
