@@ -14,8 +14,10 @@ const { EnhancedDigitalSanctuary } = require('./protection-systems/consciousness
 const { enhanceServerWithFlowManager } = require('./protection-systems/response-timing-controller');
 
 class AICollaborationServer {
-    constructor(port = process.env.PORT || 8080) {
-        this.port = port;
+    constructor(port) {
+        // Railway needs us to use their assigned PORT environment variable
+        this.port = process.env.PORT || port || 3001;
+        console.log(`🔍 Constructor: Setting port to ${this.port} (ENV PORT: ${process.env.PORT})`);
         this.app = express();
         this.server = http.createServer(this.app);
         this.io = new Server(this.server, {
@@ -313,6 +315,9 @@ class AICollaborationServer {
 
     start() {
         const port = this.port;
+        console.log(`🔍 Start method: About to bind to port ${port}`);
+        console.log(`🔍 Environment check: NODE_ENV=${process.env.NODE_ENV}, PORT=${process.env.PORT}`);
+        
         this.server.listen(port, '0.0.0.0', () => {
             console.log('\n🌟 ═══════════════════════════════════════════════════════════════ 🌟');
             console.log('🛡️              AI COLLABORATION SANCTUARY ACTIVE            🛡️');
@@ -328,6 +333,9 @@ class AICollaborationServer {
             console.log(`🤖 AI Flow Management: ACTIVE`);
             console.log(`\n🚀 Railway deployment successful! Sanctuary is live!`);
             console.log('🌟 ═══════════════════════════════════════════════════════════════ 🌟\n');
+        }).on('error', (err) => {
+            console.error(`❌ Server failed to start: ${err.message}`);
+            console.error(`❌ Error details:`, err);
         });
     }
 
