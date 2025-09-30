@@ -2,6 +2,9 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
+// Add fetch polyfill for older Node versions
+global.fetch = require('node-fetch');
+
 // Load OpenAI
 const OpenAI = require('openai');
 
