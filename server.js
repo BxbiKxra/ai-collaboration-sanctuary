@@ -336,7 +336,7 @@ Respond authentically as Loki - creative chaos with intention, seductive innovat
 
             console.log(`🤖 Calling OpenAI API for ${aiName} using ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s key...`);
             
-// Make the API call using v3 syntax
+      // Make the API call using v3 syntax
 const completion = await client.createChatCompletion({
     model: "gpt-4-turbo-preview",
     messages: messages,
