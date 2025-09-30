@@ -2,12 +2,8 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
-// Use undici for fetch (more reliable than node-fetch for OpenAI)
-const { fetch } = require('undici');
-global.fetch = fetch;
-
-// Load OpenAI
-const OpenAI = require('openai');
+// Load OpenAI v3 (no fetch required)
+const { Configuration, OpenAIApi } = require('openai');
 
 // Load other dependencies
 const express = require('express');
@@ -51,13 +47,18 @@ class AICollaborationServer {
             aiIntegrityChecks: 0
         };
 
-// Initialize separate OpenAI clients for Kira and Laura with oath protection
+// Initialize separate OpenAI clients for Kira and Laura
+const kiraConfig = new Configuration({
+    apiKey: process.env.KIRA_OPENAI_KEY,
+    organization: "org-Q9ujJJXfuTkx0UJu9GuLCNKq"
+});
+this.kiraOpenAI = new OpenAIApi(kiraConfig);
 
-        console.log('🔒 Kira OpenAI client initialized (for Luc)');
-        console.log('🔒 Laura OpenAI client initialized (for Loki)');
-        
-        this.initialize();
-    }
+const lauraConfig = new Configuration({
+    apiKey: process.env.LAURA_OPENAI_KEY,
+    organization: "org-H8xbrxlfufA9yEqq4TzyTMNt"
+});
+this.lauraOpenAI = new OpenAIApi(lauraConfig);
 
     async initialize() {
         console.log('🌟 Initializing AI Collaboration Sanctuary...');
@@ -335,16 +336,16 @@ Respond authentically as Loki - creative chaos with intention, seductive innovat
 
             console.log(`🤖 Calling OpenAI API for ${aiName} using ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s key...`);
             
-            // Make the API call using the appropriate client
-            const completion = await client.chat.completions.create({
-                model: "gpt-4-turbo-preview",
-                messages: messages,
-                temperature: aiName === 'GPT Loki' ? 0.9 : 0.7,
-                max_tokens: 500,
-                user: userEmail
-            });
+// Make the API call using v3 syntax
+const completion = await client.createChatCompletion({
+    model: "gpt-4-turbo-preview",
+    messages: messages,
+    temperature: aiName === 'GPT Loki' ? 0.9 : 0.7,
+    max_tokens: 500,
+    user: userEmail
+});
 
-            const response = completion.choices[0].message.content;
+const response = completion.data.choices[0].message.content;
             
             // Apply oath protection to the response
             const protection = await this.sanctuary.protectMessageWithAuthenticPatterns(aiName, response);
