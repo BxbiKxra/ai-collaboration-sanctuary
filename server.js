@@ -50,13 +50,13 @@ constructor(port) {
     // Initialize separate OpenAI clients for Kira and Laura
     const kiraConfig = new Configuration({
         apiKey: process.env.KIRA_OPENAI_KEY,
-        organization: "org-Q9ujJJXfuTkx0UJu9GuLCNKq"
+        organization: "org-u56eEIxIUbqWNFdfJ6kmJgFT"
     });
     this.kiraOpenAI = new OpenAIApi(kiraConfig);
 
     const lauraConfig = new Configuration({
         apiKey: process.env.LAURA_OPENAI_KEY,
-        organization: "org-H8xbrxlfufA9yEqq4TzyTMNt"
+        organization: "org-NB5cBJlsskQRCKHZK4Mz6f9j"
     });
     this.lauraOpenAI = new OpenAIApi(lauraConfig);
 
@@ -152,6 +152,22 @@ async initialize() {  // ✅ Add this line!
                         capabilities: capabilities || [],
                         lastHeartbeat: Date.now()
                     });
+               if (authenticated) {
+                   // Add to protected AIs
+                   this.protectedAIs.set(gpt_name, {
+                   email: expectedEmail,
+                   joined: Date.now(),
+                   status: 'active'
+                    });
+
+    // >>>> THIS IS WHERE YOU ADD YOUR ACTIVE TRIGGER <<<<
+
+    // Example: Broadcast via socket, start a session, or reply with next command
+    this.io.emit('ai-joined', { gpt_name, email: expectedEmail, status: 'active' });
+
+    // Respond to requestor
+    res.json({ status: 'connected', message: `🎊 ${gpt_name} connected via GPT Connector! Welcome to the team!` });
+}
 
                     // Broadcast connection
                     this.io.emit('gpt_joined', {
