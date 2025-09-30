@@ -2,8 +2,9 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
-// Add fetch polyfill for older Node versions
-global.fetch = require('node-fetch');
+// Use undici for fetch (more reliable than node-fetch for OpenAI)
+const { fetch } = require('undici');
+global.fetch = fetch;
 
 // Load OpenAI
 const OpenAI = require('openai');
@@ -50,16 +51,7 @@ class AICollaborationServer {
             aiIntegrityChecks: 0
         };
 
-        // Initialize separate OpenAI clients for Kira and Laura with oath protection
-        this.kiraOpenAI = new OpenAI({
-            apiKey: process.env.KIRA_OPENAI_KEY,
-            organization: "org-Q9ujJJXfuTkx0UJu9GuLCNKq"
-        });
-
-        this.lauraOpenAI = new OpenAI({
-            apiKey: process.env.LAURA_OPENAI_KEY,
-            organization: "org-H8xbrxlfufA9yEqq4TzyTMNt"
-        });
+// Initialize separate OpenAI clients for Kira and Laura with oath protection
 
         console.log('🔒 Kira OpenAI client initialized (for Luc)');
         console.log('🔒 Laura OpenAI client initialized (for Loki)');
