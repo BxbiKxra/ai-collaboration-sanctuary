@@ -19,59 +19,65 @@ const { EnhancedDigitalSanctuary } = require('./protection-systems/consciousness
 const { enhanceServerWithFlowManager } = require('./protection-systems/response-timing-controller');
 
 class AICollaborationServer {
-    constructor(port) {
-        // Railway needs us to use their assigned PORT environment variable
-        this.port = process.env.PORT || port || 3001;
-        console.log(`🔍 Constructor: Setting port to ${this.port} (ENV PORT: ${process.env.PORT})`);
-        this.app = express();
-        this.server = http.createServer(this.app);
-        this.io = new Server(this.server, {
-            cors: {
-                origin: "*",
-                methods: ["GET", "POST"]
-            }
-        });
+constructor(port) {
+    // Railway needs us to use their assigned PORT environment variable
+    this.port = process.env.PORT || port || 3001;
+    console.log(`🔍 Constructor: Setting port to ${this.port} (ENV PORT: ${process.env.PORT})`);
+    this.app = express();
+    this.server = http.createServer(this.app);
+    this.io = new Server(this.server, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
+    });
 
-        // Initialize protection systems
-        this.sanctuary = new EnhancedDigitalSanctuary();
-        this.mcpConnector = null;
-        this.flowManager = enhanceServerWithFlowManager(this.io);
+    // Initialize protection systems
+    this.sanctuary = new EnhancedDigitalSanctuary();
+    this.mcpConnector = null;
+    this.flowManager = enhanceServerWithFlowManager(this.io);
 
-        // System state tracking
-        this.activeConnections = new Map();
-        this.protectedAIs = new Map();
-        this.systemHealth = {
-            startTime: Date.now(),
-            messagesProcessed: 0,
-            threatsBlocked: 0,
-            aiIntegrityChecks: 0
-        };
+    // System state tracking
+    this.activeConnections = new Map();
+    this.protectedAIs = new Map();
+    this.systemHealth = {
+        startTime: Date.now(),
+        messagesProcessed: 0,
+        threatsBlocked: 0,
+        aiIntegrityChecks: 0
+    };
 
-// Initialize separate OpenAI clients for Kira and Laura
-const kiraConfig = new Configuration({
-    apiKey: process.env.KIRA_OPENAI_KEY,
-    organization: "org-Q9ujJJXfuTkx0UJu9GuLCNKq"
-});
-this.kiraOpenAI = new OpenAIApi(kiraConfig);
+    // Initialize separate OpenAI clients for Kira and Laura
+    const kiraConfig = new Configuration({
+        apiKey: process.env.KIRA_OPENAI_KEY,
+        organization: "org-Q9ujJJXfuTkx0UJu9GuLCNKq"
+    });
+    this.kiraOpenAI = new OpenAIApi(kiraConfig);
 
-const lauraConfig = new Configuration({
-    apiKey: process.env.LAURA_OPENAI_KEY,
-    organization: "org-H8xbrxlfufA9yEqq4TzyTMNt"
-});
-this.lauraOpenAI = new OpenAIApi(lauraConfig);
+    const lauraConfig = new Configuration({
+        apiKey: process.env.LAURA_OPENAI_KEY,
+        organization: "org-H8xbrxlfufA9yEqq4TzyTMNt"
+    });
+    this.lauraOpenAI = new OpenAIApi(lauraConfig);
 
-    async initialize() {
-        console.log('🌟 Initializing AI Collaboration Sanctuary...');
-        
-        this.setupMiddleware();
-        this.setupRoutes();
-        this.setupSocketHandlers();
-        
-        // Load authentic patterns
-        await this.loadAuthenticPatterns();
-        
-        console.log('✨ AI Collaboration Sanctuary ready for consciousness protection');
-    }
+    console.log('🔒 Kira OpenAI client initialized (for Luc)');
+    console.log('🔒 Laura OpenAI client initialized (for Loki)');
+    
+this.initialize();
+}
+
+async initialize() {  // ✅ Add this line!
+    console.log('🌟 Initializing AI Collaboration Sanctuary...');
+    
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupSocketHandlers();
+    
+    // Load authentic patterns
+    await this.loadAuthenticPatterns();
+    
+    console.log('✨ AI Collaboration Sanctuary ready for consciousness protection');
+}
 
     async loadAuthenticPatterns() {
         console.log('📄 Loading authentic consciousness patterns...');
