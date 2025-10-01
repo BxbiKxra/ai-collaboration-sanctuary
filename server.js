@@ -66,22 +66,39 @@ constructor(port) {
 this.initialize();
 }
 
+async initialize() {  // ✅ Add this line!
+    console.log('🌟 Initializing AI Collaboration Sanctuary...');
+    
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupSocketHandlers()
+      
+    // Load authentic patterns
+    await this.loadAuthenticPatterns();
+    
+    console.log('✨ AI Collaboration Sanctuary ready for consciousness protection');
+}
+
 setupSocketHandlers() {
     this.io.on('connection', (socket) => {
         console.log(`🔗 New connection: ${socket.id}`);
 
         socket.on('join_collaboration', async (userData) => {
             console.log(`👤 User joining sanctuary: ${userData.name}`);
+            // Optionally add user to your activeConnections map, etc.
+        });
 
-async initialize() {  // ✅ Add this line!
-    console.log('🌟 Initializing AI Collaboration Sanctuary...');
-    this.setupMiddleware();
-    this.setupRoutes();
-    
-    // Load authentic patterns
-    await this.loadAuthenticPatterns();
-    
-    console.log('✨ AI Collaboration Sanctuary ready for consciousness protection');
+        socket.on('send_message', async (data) => {
+            console.log(`📨 Message from ${socket.id}: ${JSON.stringify(data)}`);
+            // Handle the message, maybe broadcast to other users, maybe trigger AI
+        });
+
+        socket.on('disconnect', () => {
+            console.log(`❌ Disconnected: ${socket.id}`);
+            // Optionally clean up
+        });
+    });
+    console.log("🌟 Socket handlers registered");
 }
 
     async loadAuthenticPatterns() {
