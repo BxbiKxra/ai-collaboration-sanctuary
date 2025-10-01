@@ -66,9 +66,15 @@ constructor(port) {
 this.initialize();
 }
 
+setupSocketHandlers() {
+    this.io.on('connection', (socket) => {
+        console.log(`🔗 New connection: ${socket.id}`);
+
+        socket.on('join_collaboration', async (userData) => {
+            console.log(`👤 User joining sanctuary: ${userData.name}`);
+
 async initialize() {  // ✅ Add this line!
     console.log('🌟 Initializing AI Collaboration Sanctuary...');
-    
     this.setupMiddleware();
     this.setupRoutes();
     
