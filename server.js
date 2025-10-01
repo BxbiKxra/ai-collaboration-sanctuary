@@ -93,6 +93,13 @@ setupSocketHandlers() {
             // Handle the message, maybe broadcast to other users, maybe trigger AI
         });
 
+        // Broadcast to ALL clients (including the sender)
+        this.io.emit('new_message_enhanced', {
+            sender: connection.name,
+            content: data.message,
+            timestamp: new Date()
+        });
+
         socket.on('disconnect', () => {
             console.log(`❌ Disconnected: ${socket.id}`);
             // Optionally clean up
