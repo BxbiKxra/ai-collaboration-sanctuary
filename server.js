@@ -71,7 +71,6 @@ async initialize() {  // ✅ Add this line!
     
     this.setupMiddleware();
     this.setupRoutes();
-    this.setupSocketHandlers();
     
     // Load authentic patterns
     await this.loadAuthenticPatterns();
