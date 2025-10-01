@@ -8,7 +8,6 @@ const { Configuration, OpenAIApi } = require('openai');
 // Load other dependencies
 const express = require('express');
 const cors = require('cors');
-const { Server } = require('socket.io');
 const http = require('http');
 const path = require('path');
 
