@@ -257,17 +257,6 @@ async getAIResponse(aiName, message, conversationHistory = []) {
         throw error;
     }
 }
-// TEMP: BYPASS PROTECTION FOR DEBUGGING
-// const protection = await this.sanctuary.protectMessageWithAuthenticPatterns(aiName, response);
-
-// if (protection.blocked) {
-//     console.warn(`🛡️ Oath protection blocked corrupted response from ${aiName}`);
-//     return null;
-// }
-
-console.log(`✅ ${aiName} responded authentically with oath protection via ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s account`);
-return response;
-
 
     // Trigger AI responses with real OpenAI API calls
     async triggerAIResponses(message, senderName) {
