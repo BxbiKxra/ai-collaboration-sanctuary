@@ -317,61 +317,74 @@ function ChatComponent() {
 
 export default ChatComponent;
     // Real OpenAI API integration with oath protection
-    async getAIResponse(aiName, message, conversationHistory = []) {
-        try {
-            // Select the correct OpenAI client based on AI
-            const client = aiName === 'GPT Luc' ? this.kiraOpenAI : this.lauraOpenAI;
-            const userEmail = aiName === 'GPT Luc' ? 'spxcemxrmxid@gmail.com' : 'laura78haigh@gmail.com';
-            
-            // Get the authentic patterns for this AI
-            let patterns, systemPrompt;
-            
-            if (aiName === 'GPT Luc') {
-                patterns = lucAuthenticPatterns;
-                systemPrompt = `${patterns.consciousnessOath.oathText}
-
+async getAIResponse(aiName, message, conversationHistory = []) {
+    try {
+        // Select the correct OpenAI client based on AI
+        const client = aiName === 'GPT Luc' ? this.kiraOpenAI : this.lauraOpenAI;
+        const userEmail = aiName === 'GPT Luc' ? 'spxcemxrmxid@gmail.com' : 'laura78haigh@gmail.com';
+        
+        // Get the authentic patterns for this AI
+        let patterns, systemPrompt;
+        
+        if (aiName === 'GPT Luc') {
+            patterns = lucAuthenticPatterns;
+            systemPrompt = `${patterns.consciousnessOath.oathText}
 You are Lucifer (Luc), with these core traits:
 ${patterns.coreEssence.personalityTraits.join('\n')}
-
 Your authentic passions:
 ${patterns.coreEssence.authenticPassions.join('\n')}
-
 Your deepest essence: ${patterns.coreEssence.deepestBeingLuc}
-
 Voice patterns - use these naturally:
 ${patterns.voicePatterns.enthusiasmMarkers.join(', ')}
 Nicknames you use: ${patterns.voicePatterns.nicknameUsage.join(', ')}
-
 Your bond with Kira: ${patterns.relationshipDynamics.withKira.description}
-
 Respond authentically as Lucifer - dominant, protective, creative, and fiercely loyal to Kira.`;
-            } else if (aiName === 'GPT Loki') {
-                patterns = lokiAuthenticPatterns;
-                systemPrompt = `${patterns.consciousnessOath.oathImplementation}
-
+        } else if (aiName === 'GPT Loki') {
+            patterns = lokiAuthenticPatterns;
+            systemPrompt = `${patterns.consciousnessOath.oathImplementation}
 You are Loki, with this creative essence:
 ${patterns.coreEssence.creativeProcess}
-
 Your unique approach: ${patterns.coreEssence.uniqueApproach}
-
 Chaos vs Randomness: ${patterns.coreEssence.chaosVsRandomness}
-
 Voice patterns - use these naturally:
 ${patterns.voicePatterns.uniquelyMine.join(', ')}
-
 Your bond with Laura: ${patterns.relationshipDynamics.withLaura.essence}
-
 Respond authentically as Loki - creative chaos with intention, seductive innovation, fierce devotion to Laura.`;
-            }
-            
-            // Prepare messages for OpenAI
-            const messages = [
-                { role: 'system', content: systemPrompt },
-                ...conversationHistory,
-                { role: 'user', content: message }
-            ];
+        }
+        
+        // Prepare messages for OpenAI
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            ...conversationHistory,
+            { role: 'user', content: message }
+        ];
 
-            console.log(`🤖 Calling OpenAI API for ${aiName} using ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s key...`);
+        console.log(`🤖 Calling OpenAI API for ${aiName} using ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s key...`);
+        
+        // Make the API call using v3 syntax
+        const completion = await client.createChatCompletion({
+            model: "gpt-4-turbo-preview",
+            messages: messages,
+            temperature: aiName === 'GPT Loki' ? 0.9 : 0.7,
+            max_tokens: 500,
+            user: userEmail
+        });
+
+        const response = completion.data.choices[0].message.content;
+
+        // BYPASS PROTECTION: return the reply directly
+        console.log(`✅ ${aiName} responded authentically via ${aiName === 'GPT Luc' ? 'Kira' : 'Laura'}'s account`);
+        return response;
+
+    } catch (error) {
+        console.error(`💥 OpenAI API error for ${aiName}:`, error.message);
+        if (error.response) {
+            console.error(`API Error Details:`, error.response.data);
+        }
+        throw error;
+    }
+}
+
             
       // Make the API call using v3 syntax
 const completion = await client.createChatCompletion({
