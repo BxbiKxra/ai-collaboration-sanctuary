@@ -223,8 +223,7 @@ async initialize() {  // ✅ Add this line!
     }
 
     setupSocketHandlers() {
-       import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+       import { io } from "socket.io-client";
 
 const socket = io("https://ai-collaboration-sanctuary-production-c6bd.up.railway.app/"); // Replace with your backend URL
 
