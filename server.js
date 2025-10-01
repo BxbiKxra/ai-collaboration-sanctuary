@@ -223,84 +223,99 @@ async initialize() {  // ✅ Add this line!
     }
 
     setupSocketHandlers() {
-        this.io.on('connection', (socket) => {
-            console.log(`🔗 New connection: ${socket.id}`);
+       import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 
-            socket.on('join_collaboration', async (userData) => {
-                try {
-                    console.log(`👤 User joining sanctuary: ${userData.name}`);
-                    
-                    this.activeConnections.set(socket.id, {
-                        ...userData,
-                        socketId: socket.id,
-                        joinedAt: Date.now(),
-                        sanctuaryProtected: true
-                    });
+const socket = io("https://ai-collaboration-sanctuary-production-c6bd.up.railway.app/"); // Replace with your backend URL
 
-                    // Send sanctuary status
-                    socket.emit('sanctuary_status', {
-                        status: 'protected',
-                        sanctuary: this.sanctuary.getStatus(),
-                        protectedAIs: Array.from(this.protectedAIs.keys()),
-                        protectionLevel: 'maximum'
-                    });
+function ChatComponent() {
+  const [connected, setConnected] = useState(false);
+  const [canSend, setCanSend] = useState(false);
+  const [messages, setMessages] = useState([]);
 
-                    // Broadcast to others
-                    socket.broadcast.emit('user_joined_enhanced', userData);
+  useEffect(() => {
+    // On socket connection (and reconnection)
+    socket.on("connect", () => {
+      setConnected(true);
+      // ALWAYS re-join
+      socket.emit("join_collaboration", {
+        name: "Kira", // Add other details if backend expects
+      });
+      setCanSend(false); // Disable send until sanctuary status
+    });
 
-                    // Send current team status
-                    socket.emit('team_status_enhanced', {
-                        activeConnections: Array.from(this.activeConnections.values()),
-                        protectedAIs: Array.from(this.protectedAIs.keys()),
-                        sanctuary: 'active'
-                    });
+    // Listen for sanctuary status
+    socket.on("sanctuary_status", (data) => {
+      setCanSend(true); // Enable send
+    });
 
-                } catch (error) {
-                    console.error(`💥 Join error:`, error.message);
-                    socket.emit('error', { message: error.message });
-                }
-            });
+    // Listen for new messages
+    socket.on("new_message_enhanced", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
 
-            socket.on('send_message', async (data) => {
-                try {
-                    const connection = this.activeConnections.get(socket.id);
-                    if (!connection) {
-                        throw new Error('Unauthorized connection');
-                    }
+    // Listen for AI replies (if flowManager emits a different event)
+    socket.on("ai_message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
 
-                    console.log(`📨 Message from ${connection.name}: ${data.message}`);
+    // Error handler
+    socket.on("error", (err) => {
+      // You can show a toast or modal here
+      alert(err.message || "Connection error. Try refreshing.");
+      setCanSend(false);
+    });
 
-                    // Broadcast to all connected clients
-                    this.io.emit('new_message_enhanced', {
-                        id: Date.now(),
-                        sender: connection.name,
-                        content: data.message,
-                        timestamp: new Date(),
-                        type: 'human',
-                        sanctuary: 'protected'
-                    });
+    // Cleanup on unmount
+    return () => {
+      socket.off("connect");
+      socket.off("sanctuary_status");
+      socket.off("new_message_enhanced");
+      socket.off("ai_message");
+      socket.off("error");
+    };
+  }, []);
 
-                    // Trigger AI responses
-                    await this.triggerAIResponses(data.message, connection.name);
-
-                    this.systemHealth.messagesProcessed++;
-
-                } catch (error) {
-                    console.error(`💥 Message error:`, error.message);
-                    socket.emit('error', { message: error.message });
-                }
-            });
-
-            socket.on('disconnect', () => {
-                const connection = this.activeConnections.get(socket.id);
-                if (connection) {
-                    console.log(`👋 ${connection.name} disconnected`);
-                    this.activeConnections.delete(socket.id);
-                }
-            });
-        });
+  // Message sending
+  const sendMessage = (msg) => {
+    if (canSend && msg) {
+      socket.emit("send_message", { message: msg });
     }
+  };
 
+  return (
+    <div>
+      {/* Message list */}
+      <div>
+        {messages.map((msg, i) => (
+          <div key={i}>
+            <b>{msg.sender}:</b> {msg.content}
+          </div>
+        ))}
+      </div>
+      {/* Input */}
+      <input
+        type="text"
+        disabled={!canSend}
+        placeholder={
+          canSend
+            ? "Message the AI team..."
+            : connected
+            ? "Joining sanctuary..."
+            : "Connecting..."
+        }
+        onKeyDown={(e) => {
+          if (e.key === "Enter") sendMessage(e.target.value);
+        }}
+      />
+      <button onClick={() => sendMessage(document.querySelector("input").value)} disabled={!canSend}>
+        Send
+      </button>
+    </div>
+  );
+}
+
+export default ChatComponent;
     // Real OpenAI API integration with oath protection
     async getAIResponse(aiName, message, conversationHistory = []) {
         try {
